@@ -1,0 +1,26 @@
+version: "3.6"
+services:
+  beacon_node:
+    image: sigp/lighthouse:v1.0.5
+    volumes:
+      - ./.lighthouse:/root/.lighthouse
+    ports:
+      - 9000:9000/tcp
+      - 9000:9000/udp
+    depends_on:
+      - rate_limiter
+    command: ["lighthouse", "bn", "--staking", "--http-address", "0.0.0.0", "--eth1-endpoints", "http://rate_limiter:8080,https://eth-mainnet.alchemyapi.io/v2/your-api-key,https://mainnet.infura.io/v3/your-api-key"]
+    # Also modify rate-limiter/config.js for the endpoint
+    restart: always
+  validator_client:
+    image: sigp/lighthouse:v1.0.5
+    volumes:
+      - ./.lighthouse:/root/.lighthouse
+    depends_on:
+      - beacon_node
+    command: ["lighthouse", "vc", "--beacon-nodes", "http://beacon_node:5052"]
+    restart: always
+  rate_limiter:
+    build: ./rate-limiter
+    restart: always
+
